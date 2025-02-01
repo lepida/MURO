@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Entrenamiento de Perro</title>
+  <style>
+    #canvas {
+      border: 1px solid black;
+      background-color: #fff;
+    }
+    .controls {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Entrenamiento de Perro</h1>
+
+<div class="controls">
+  <label for="ladrillosHorizontales">Ladrillos Horizontales: </label>
+  <input type="number" id="ladrillosHorizontales" name="ladrillosHorizontales" min="1" value="4">
+  <label for="ladrillosVerticales">Ladrillos Verticales: </label>
+  <input type="number" id="ladrillosVerticales" name="ladrillosVerticales" min="1" value="4">
+  <br><br>
+  <label for="puntos">Cantidad de Puntos a Pintar (1-10): </label>
+  <input type="number" id="puntos" name="puntos" min="1" max="10" value="5">
+  <button id="generar">Generar Puntos</button>
+</div>
+
+<canvas id="canvas" width="600" height="600"></canvas>
+
+<script src="script.js"></script>
+</body>
+</html>

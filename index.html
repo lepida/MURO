@@ -14,6 +14,11 @@
     .linea-agujeros-inputs {
       margin-top: 5px;
     }
+    .descripcion {
+      font-size: 0.9em;
+      color: #555;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -35,12 +40,36 @@
   <br>
   <label for="puntos">Cantidad de Puntos a Pintar (1-10): </label>
   <input type="number" id="puntos" name="puntos" min="1" max="10" value="5">
+  <br><br>
+  <label>Zona de Concentración de Puntos:</label>
+  <br>
+  <input type="radio" id="zonaOriginal" name="zona" value="original" checked>
+  <label for="zonaOriginal">Distribución Original (en todo el muro)</label>
+  <br>
+  <input type="radio" id="zonaSuperior" name="zona" value="superior">
+  <label for="zonaSuperior">Mitad Superior</label>
+  <br>
+  <input type="radio" id="zonaInferior" name="zona" value="inferior">
+  <label for="zonaInferior">Mitad Inferior</label>
+  <br><br>
+  <label>Tipo de Distribución en la Zona Seleccionada (no afecta a la distribución original): </label>
+  <br>
+  <input type="radio" id="distribucionDeterminista" name="tipoDistribucion" value="determinista" checked>
+  <label for="distribucionDeterminista">Determinista</label>
+  <p class="descripcion">
+    <strong>Determinista:</strong> Todos los puntos se concentrarán exclusivamente en la zona seleccionada.
+  </p>
+  <input type="radio" id="distribucionProbabilistica" name="tipoDistribucion" value="probabilistica">
+  <label for="distribucionProbabilistica">Probabilística</label>
+  <p class="descripcion">
+    <strong>Probabilística:</strong> La mayoría de los puntos se ubicarán en la zona seleccionada, pero algunos pueden aparecer fuera de ella.
+  </p>
+  <br>
   <button id="generar">Generar Puntos</button>
 </div>
 
 <canvas id="canvas" width="600" height="600"></canvas>
 
-<!-- Mueve la etiqueta de script al final del body -->
 <script src="script.js"></script>
 </body>
 </html>

@@ -12,6 +12,15 @@ window.addEventListener('DOMContentLoaded', function () {
   let anchoLadrillo;
   let altoLadrillo;
 
+  // Variables adicionales
+  let zonaSeleccionada = 'original';
+  let tipoDistribucion = 'determinista';
+
+  // Función para capitalizar la primera letra de una palabra
+  function capitalizarPrimeraLetra(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
   // Función para cargar parámetros desde el Local Storage
   function cargarParametros() {
     // Obtener valores del Local Storage
@@ -20,6 +29,8 @@ window.addEventListener('DOMContentLoaded', function () {
     const lineasPorLadrilloGuardadas = localStorage.getItem('lineasPorLadrillo');
     const agujerosPorLineaGuardadas = JSON.parse(localStorage.getItem('agujerosPorLinea'));
     const cantidadPuntosGuardada = localStorage.getItem('puntos');
+    const zonaGuardada = localStorage.getItem('zonaSeleccionada');
+    const tipoDistribucionGuardada = localStorage.getItem('tipoDistribucion');
 
     // Asignar valores a los inputs si existen
     if (columnasGuardadas !== null) {
@@ -33,6 +44,14 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     if (cantidadPuntosGuardada !== null) {
       document.getElementById('puntos').value = cantidadPuntosGuardada;
+    }
+    if (zonaGuardada !== null) {
+      zonaSeleccionada = zonaGuardada;
+      document.getElementById(`zona${capitalizarPrimeraLetra(zonaGuardada)}`).checked = true;
+    }
+    if (tipoDistribucionGuardada !== null) {
+      tipoDistribucion = tipoDistribucionGuardada;
+      document.getElementById(`distribucion${capitalizarPrimeraLetra(tipoDistribucion)}`).checked = true;
     }
 
     // Si tenemos líneas de agujeros guardadas, las cargamos
@@ -59,6 +78,8 @@ window.addEventListener('DOMContentLoaded', function () {
     localStorage.setItem('lineasPorLadrillo', document.getElementById('lineasPorLadrillo').value);
     localStorage.setItem('agujerosPorLinea', JSON.stringify(agujerosPorLinea));
     localStorage.setItem('puntos', document.getElementById('puntos').value);
+    localStorage.setItem('zonaSeleccionada', zonaSeleccionada);
+    localStorage.setItem('tipoDistribucion', tipoDistribucion);
   }
 
   // Función para generar inputs para el número de agujeros por línea
@@ -118,6 +139,22 @@ window.addEventListener('DOMContentLoaded', function () {
 
     const cantidadPuntos = parseInt(document.getElementById('puntos').value);
 
+    // Obtener zona seleccionada
+    const radiosZona = document.getElementsByName('zona');
+    radiosZona.forEach(radio => {
+      if (radio.checked) {
+        zonaSeleccionada = radio.value;
+      }
+    });
+
+    // Obtener tipo de distribución
+    const radiosDistribucion = document.getElementsByName('tipoDistribucion');
+    radiosDistribucion.forEach(radio => {
+      if (radio.checked) {
+        tipoDistribucion = radio.value;
+      }
+    });
+
     if (cantidadPuntos >= 1 && cantidadPuntos <= 10) {
       // Recalcular dimensiones de los ladrillos
       anchoLadrillo = canvas.width / columnas;
@@ -144,6 +181,24 @@ window.addEventListener('DOMContentLoaded', function () {
   });
   document.getElementById('puntos').addEventListener('change', function() {
     guardarParametros();
+  });
+
+  // Evento para actualizar la zona seleccionada
+  const radiosZona = document.getElementsByName('zona');
+  radiosZona.forEach(radio => {
+    radio.addEventListener('change', function () {
+      zonaSeleccionada = this.value;
+      guardarParametros();
+    });
+  });
+
+  // Evento para actualizar el tipo de distribución
+  const radiosDistribucion = document.getElementsByName('tipoDistribucion');
+  radiosDistribucion.forEach(radio => {
+    radio.addEventListener('change', function () {
+      tipoDistribucion = this.value;
+      guardarParametros();
+    });
   });
 
   function generarMuro() {
@@ -215,27 +270,10 @@ window.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Función para dividir los agujeros en sectores
-  function dividirEnSectores(agujeros, numeroSectores) {
-    const sectores = [];
-    for (let i = 0; i < numeroSectores; i++) {
-      sectores.push([]);
-    }
-
-    agujeros.forEach((agujero) => {
-      const col = agujero.columnaLadrillo; // Columna del ladrillo
-      const sectorAncho = columnas / numeroSectores;
-      const indiceSector = Math.floor(col / sectorAncho);
-      sectores[Math.min(indiceSector, numeroSectores - 1)].push(agujero);
-    });
-
-    return sectores;
-  }
-
   function obtenerPuntosAleatorios(cantidad) {
     // Generar lista de todos los agujeros posibles
     const totalLadrillos = filas * columnas;
-    const agujeros = [];
+    let agujeros = [];
     for (let ladrillo = 0; ladrillo < totalLadrillos; ladrillo++) {
       for (let l = 0; l < lineasPorLadrillo; l++) {
         const numAgujeros = agujerosPorLinea[l];
@@ -243,18 +281,14 @@ window.addEventListener('DOMContentLoaded', function () {
           // Calcular coordenadas del agujero
           const col = ladrillo % columnas;
           const filaLadrillo = Math.floor(ladrillo / columnas);
-          const x =
-            col * anchoLadrillo +
-            ((a + 1) * anchoLadrillo) / (numAgujeros + 1);
-          const y =
-            filaLadrillo * altoLadrillo +
-            ((l + 1) * altoLadrillo) / (lineasPorLadrillo + 1);
+          const x = col * anchoLadrillo + ((a + 1) * anchoLadrillo) / (numAgujeros + 1);
+          const y = filaLadrillo * altoLadrillo + ((l + 1) * altoLadrillo) / (lineasPorLadrillo + 1);
 
           // Calcular línea global del agujero
           const lineaGlobal = filaLadrillo * lineasPorLadrillo + l;
 
           // Crear objeto del agujero con información adicional
-          agujeros.push({
+          const agujeroObj = {
             ladrillo,
             linea: l,
             agujero: a,
@@ -264,8 +298,36 @@ window.addEventListener('DOMContentLoaded', function () {
             filaLadrillo: filaLadrillo,
             numeroAgujero: a + 1,
             numeroLinea: l + 1,
-            lineaGlobal: lineaGlobal, // Añadimos la línea global
-          });
+            lineaGlobal: lineaGlobal,
+          };
+
+          // Filtrar o ajustar probabilidades según la zona y tipo de distribución
+          let incluirAgujero = true;
+
+          if (zonaSeleccionada !== 'original') {
+            const enZonaSeleccionada = (zonaSeleccionada === 'superior' && y <= canvas.height / 2) ||
+                                       (zonaSeleccionada === 'inferior' && y > canvas.height / 2);
+
+            if (tipoDistribucion === 'determinista') {
+              incluirAgujero = enZonaSeleccionada;
+            } else if (tipoDistribucion === 'probabilistica') {
+              // Asignar mayor probabilidad a los puntos en la zona seleccionada
+              const probabilidadEnZona = 0.8; // 80% de probabilidad de incluir puntos en la zona seleccionada
+              const probabilidadFueraZona = 0.2; // 20% de probabilidad fuera de la zona
+
+              const random = Math.random();
+
+              if (enZonaSeleccionada) {
+                incluirAgujero = random <= probabilidadEnZona;
+              } else {
+                incluirAgujero = random <= probabilidadFueraZona;
+              }
+            }
+          }
+
+          if (incluirAgujero) {
+            agujeros.push(agujeroObj);
+          }
         }
       }
     }
@@ -335,6 +397,23 @@ window.addEventListener('DOMContentLoaded', function () {
     return seleccionados;
   }
 
+  // Función para dividir los agujeros en sectores
+  function dividirEnSectores(agujeros, numeroSectores) {
+    const sectores = [];
+    for (let i = 0; i < numeroSectores; i++) {
+      sectores.push([]);
+    }
+
+    agujeros.forEach((agujero) => {
+      const col = agujero.columnaLadrillo; // Columna del ladrillo
+      const sectorAncho = columnas / numeroSectores;
+      const indiceSector = Math.floor(col / sectorAncho);
+      sectores[Math.min(indiceSector, numeroSectores - 1)].push(agujero);
+    });
+
+    return sectores;
+  }
+
   // Función para verificar si un candidato cumple con la distancia mínima respecto a los puntos seleccionados
   function cumpleDistancia(candidato, seleccionados, distanciaMinima) {
     for (const punto of seleccionados) {
@@ -376,6 +455,7 @@ window.addEventListener('DOMContentLoaded', function () {
   // Iniciar la aplicación
   cargarParametros();
 
+  // Configurar variables iniciales
   columnas = parseInt(document.getElementById('ladrillosHorizontales').value);
   filas = parseInt(document.getElementById('ladrillosVerticales').value);
   lineasPorLadrillo = parseInt(document.getElementById('lineasPorLadrillo').value);
